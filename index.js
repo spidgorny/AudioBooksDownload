@@ -3,7 +3,7 @@
  *
  */
 
-let jsdom = require('jsdom');
+let jsdom = require("jsdom/lib/old-api.js");
 let request = require('request-promise');
 let co = require('co');
 let fs = require('fs');
@@ -14,162 +14,176 @@ let url = args[args.length - 1];
 
 if (!url.match(/^http/i)) {
 
-  console.log('Usage: %@ url'.fmt(args[0]));
-  process.exit(-1);
+	console.log('Usage: %@ url'.fmt(args[0]));
+	process.exit(-1);
 }
 
 let saveUrlToFile = function (path, urlToLoad) {
 
-  return co( function* () {
+	return co(function*() {
 
-    let fileName = null;
-    if (path) {
+		let fileName = null;
+		if (path) {
 
-      fileName = path + '/' + urlToLoad.replace(/^.+\/([^/]+)$/, '$1');
-      console.log(`Download "${urlToLoad}" to "${fileName}"...`);
-    }
-    else {
+			fileName = path + '/' + urlToLoad.replace(/^.+\/([^/]+)$/, '$1');
+			console.log(`Download "${urlToLoad}" to "${fileName}"...`);
+		}
+		else {
 
-      console.log(`Download "${urlToLoad}"...`);
-    }
+			console.log(`Download "${urlToLoad}"...`);
+		}
 
-    let host = urlToLoad.match(/\/\/([^/]+)\//);
-    if (host)
-      host = host[1];
+		let host = urlToLoad.match(/\/\/([^/]+)\//);
+		if (host)
+			host = host[1];
 
-    let res = yield request({
-      url: encodeURI(urlToLoad),
-      encoding: null,
-      headers: {
-        'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.104 Safari/537.36',
-        'Referer': url,
-        //'Accept': '*/*',
-        //'Accept-Encoding': 'identity;q=1, *;q=0 ',
-        //'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4',
-        'Cache-Control': 'no-cache',
-        //'Connection': 'keep-alive',
-        //'Pragma': 'no-cache',
-        //'Range': 'bytes=0-',
-        'Host': host,
-      },
-    });
+		let res = yield request({
+			url: encodeURI(urlToLoad),
+			encoding: null,
+			headers: {
+				'User-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.104 Safari/537.36',
+				'Referer': url,
+				//'Accept': '*/*',
+				//'Accept-Encoding': 'identity;q=1, *;q=0 ',
+				//'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.6,en;q=0.4',
+				'Cache-Control': 'no-cache',
+				//'Connection': 'keep-alive',
+				//'Pragma': 'no-cache',
+				//'Range': 'bytes=0-',
+				'Host': host,
+			},
+		});
 
-    if (!path) {
+		if (!path) {
 
-      return res.toString('utf8');
-    }
+			return res.toString('utf8');
+		}
 
-    fs.writeFileSync(fileName, res);
-    console.log(`Done: ${res.length} bytes`);
+		fs.writeFileSync(fileName, res);
+		console.log(`Done: ${res.length} bytes`);
 
-    return fileName;
-  })
-    .catch(err => {
+		return fileName;
+	})
+	.catch(err => {
 
-      console.error(`saveUrlToFile(${path}, ${urlToLoad})`, err);
-    })
+		console.error(`saveUrlToFile(${path}, ${urlToLoad})`, err);
+	})
 };
 
 let processFunction = function (errors, window) {
 
-  co(function* () {
+	co(function*() {
 
-    let $ = window.$;
-    let title = $('[property="og:title"]').attr('content');
-    let parts = title.split(/\s+\-\s+/);
-    let artist = parts[0];
-    let book = parts[1];
+		let $ = window.jQuery;
+		let title = $('[property="og:title"]').attr('content');
+		let parts = title.split(/\s+\-\s+/);
+		let artist = parts[0];
+		let book = parts[1];
 
-    let content = $('#content');
-    let img = content.find('img[alt=image]:first').attr('src');
-    let scripts = content.find('script');
+		let content = $('#content');
+		let img = content.find('img[alt=image]:first').attr('src');
+		let scripts = content.find('script');
 
-    let found;
-    for (let l = scripts.length, i = 0; i < l; i++) {
+		let found;
+		for (let l = scripts.length, i = 0; i < l; i++) {
 
-      let matched = scripts.eq(i).text().match(/audioPlayer\((\d+),/);
-      if (matched)
-        found = matched[1];
-    }
+			let matched = scripts.eq(i).text().match(/audioPlayer\((\d+),/);
+			if (matched)
+				found = matched[1];
+		}
 
-    if (!found) {
+		if (!found) {
 
-      throw 'Unable to find ID';
-    }
+			throw 'Unable to find ID';
+		}
 
-    let data = yield saveUrlToFile(null, 'http://audioknigi.club/rest/bid/' + found);
+		let data = yield saveUrlToFile(null, 'http://audioknigi.club/rest/bid/' + found);
 
-    data = JSON.parse(data);
+		data = JSON.parse(data);
 
-    console.log('Title:', title);
-    console.log('Image:', img);
+		console.log('Title:', title);
+		console.log('Image:', img);
 
-    if (!fs.existsSync(title)) {
+		if (!fs.existsSync(title)) {
 
-      fs.mkdirSync(title);
-    }
+			fs.mkdirSync(title);
+		}
 
-    fs.writeFileSync(`${title}/url.txt`, url);
+		fs.writeFileSync(`${title}/url.txt`, url);
 
-    let imgFileName = yield saveUrlToFile(title, img);
+		let imgFileName = yield saveUrlToFile(title, img);
 
-    //data = data.match(/{[^{]+title:"[^"]+"[^}]+mp3:"[^"]+"[^}]+}/gmi);
-    let tracks = data.length;
+		//data = data.match(/{[^{]+title:"[^"]+"[^}]+mp3:"[^"]+"[^}]+}/gmi);
+		let tracks = data.length;
 
-    for (let item of data) {
+		for (let item of data) {
 
-      //item = item.replace(/(title|mp3):/g, '"$1":').replace(/(\n|\r)/g, '').replace(/,\s+}/g, '}');
-      //item = JSON.parse(item);
+			//item = item.replace(/(title|mp3):/g, '"$1":').replace(/(\n|\r)/g, '').replace(/,\s+}/g, '}');
+			//item = JSON.parse(item);
 
-      let fileName = yield saveUrlToFile(title, item.mp3);
+			let fileName = yield saveUrlToFile(title, item.mp3);
 
-      //let meta = ffmetadata.read.sync(ffmetadata, fileName);
-      //console.log(meta);
-      let num = fileName.match(/(\d+)[^/]+$/);
-      num = num ? parseInt(num[1]) : 0;
+			//let meta = ffmetadata.read.sync(ffmetadata, fileName);
+			//console.log(meta);
+			let num = fileName.match(/(\d+)[^/]+$/);
+			num = num ? parseInt(num[1]) : 0;
 
-      yield new Promise((resolve, reject) => {
+			yield new Promise((resolve, reject) => {
 
-        ffmetadata.write(
-          fileName,
-          {
-            artist: artist,
-            album: book,
-            title: fileName.split(/\//)[1].replace(/^\d+_/, '').replace(/\.mp3$/i, ''),
-            track: `${num}/${tracks}`,
-          },
-          {
-            attachments: [imgFileName]
-          },
-          err => {
+				ffmetadata.write(fileName, {
+					artist: artist,
+					album: book,
+					title: fileName.split(/\//)[1].replace(/^\d+_/, '').replace(/\.mp3$/i, ''),
+					track: `${num}/${tracks}`,
+				},
+				{
+					attachments: [imgFileName]
+				},
+				err => {
 
-            if (err) {
+					if (err) {
 
-              reject(err);
-            }
-            else {
+						reject(err);
+					}
+					else {
 
-              resolve();
-            }
-          }
-        );
-      });
-    }
-  })
-    .catch(err => {
+						resolve();
+					}
+				}
+				)
+				;
+			})
+			;
+		}
+	})
+	.catch(err => {
 
-      if (err) {
+		if (err) {
 
-        throw err.stack || err;
-      }
-    });
+			throw err.stack || err;
+		}
+	});
 };
 
 console.log(`Downloading ${url}...`);
 
-jsdom.env(
-  url,
-  ['http://code.jquery.com/jquery.js'],
-  processFunction
-);
+jsdom.env({
+	url: url,
+	scripts: ['http://code.jquery.com/jquery.js'],
+	done: processFunction,
+	proxy: process.env.http_proxy,
+	//runScripts: "dangerously"
+});
 
+/*
+ JSDOM.fromURL(url, {
+	proxy: process.env.http_proxy,
+ }).then(dom => {
+ let window = dom.defaultView;
+ (window, 'http://code.jquery.com/jquery.js',
+ processFunction
+ );
+ }).catch (e => {
+ console.error(e);
+ });
+ */
