@@ -18,6 +18,8 @@ if (!url.match(/^http/i)) {
 	process.exit(-1);
 }
 
+this.setMetadata = false;
+
 let saveUrlToFile = function (path, urlToLoad) {
 
 	return co(function*() {
@@ -128,32 +130,31 @@ let processFunction = function (errors, window) {
 			let num = fileName.match(/(\d+)[^/]+$/);
 			num = num ? parseInt(num[1]) : 0;
 
-			yield new Promise((resolve, reject) => {
+			if (this.setMetadata) {
+				yield new Promise((resolve, reject) => {
 
-				ffmetadata.write(fileName, {
-					artist: artist,
-					album: book,
-					title: fileName.split(/\//)[1].replace(/^\d+_/, '').replace(/\.mp3$/i, ''),
-					track: `${num}/${tracks}`,
-				},
-				{
-					attachments: [imgFileName]
-				},
-				err => {
+					ffmetadata.write(fileName, {
+							artist: artist,
+							album: book,
+							title: fileName.split(/\//)[1].replace(/^\d+_/, '').replace(/\.mp3$/i, ''),
+							track: `${num}/${tracks}`,
+						},
+						{
+							attachments: [imgFileName]
+						},
+						err => {
 
-					if (err) {
+							if (err) {
 
-						reject(err);
-					}
-					else {
+								reject(err);
+							}
+							else {
 
-						resolve();
-					}
-				}
-				)
-				;
-			})
-			;
+								resolve();
+							}
+						});
+				});
+			}
 		}
 	})
 	.catch(err => {
