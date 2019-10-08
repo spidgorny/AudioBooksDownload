@@ -35,105 +35,46 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-var fs = require("fs");
-var path = require("path");
+exports.__esModule = true;
+var AudioKnigiClub_1 = require("./AudioKnigiClub");
+require('source-map-support').install();
+var ABooksInfo_1 = require("./ABooksInfo");
 var url = process.argv[2];
 if (!url) {
     throw new Error('> node abooks.js https://abooks.info/...');
 }
 (function () { return __awaiter(void 0, void 0, void 0, function () {
-    var rp, html, cheerio, $, player, dataTracksURL, jsonSource, json, folder, _i, json_1, desc, source, destination, stat, head;
+    var handlers, _i, handlers_1, handlerClass, handler, playlist;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 console.log(url);
-                rp = require('request-promise');
-                return [4 /*yield*/, rp(url)];
+                handlers = [
+                    ABooksInfo_1.ABooksInfo,
+                    AudioKnigiClub_1.AudioKnigiClub,
+                ];
+                _i = 0, handlers_1 = handlers;
+                _a.label = 1;
             case 1:
-                html = _a.sent();
-                cheerio = require('cheerio');
-                $ = cheerio.load(html);
-                player = $('div[data-tracks-url]');
-                dataTracksURL = player.attr('data-tracks-url');
-                console.log(dataTracksURL);
-                return [4 /*yield*/, rp(dataTracksURL)];
+                if (!(_i < handlers_1.length)) return [3 /*break*/, 6];
+                handlerClass = handlers_1[_i];
+                if (!handlerClass.supports(url)) return [3 /*break*/, 5];
+                handler = new handlerClass(url);
+                return [4 /*yield*/, handler.getPlaylist()];
             case 2:
-                jsonSource = _a.sent();
-                json = JSON.parse(jsonSource);
-                folder = json[0].title;
-                if (!fs.existsSync(folder)) {
-                    fs.mkdirSync(folder);
-                }
-                _i = 0, json_1 = json;
-                _a.label = 3;
+                playlist = _a.sent();
+                if (!playlist) return [3 /*break*/, 4];
+                handler.mkdir(playlist);
+                return [4 /*yield*/, handler.downloadOneByOne(playlist)];
             case 3:
-                if (!(_i < json_1.length)) return [3 /*break*/, 11];
-                desc = json_1[_i];
-                source = new URL(desc.audio);
-                destination = folder + '/' + path.basename(source.pathname);
-                console.log(destination);
-                stat = fs.statSync(destination);
-                if (!stat) return [3 /*break*/, 8];
-                return [4 /*yield*/, rp.head(source + '')];
-            case 4:
-                head = _a.sent();
-                if (!(head['content-length'] > stat.size)) return [3 /*break*/, 6];
-                return [4 /*yield*/, download(source + '', destination)];
+                _a.sent();
+                _a.label = 4;
+            case 4: return [3 /*break*/, 6];
             case 5:
-                _a.sent();
-                return [3 /*break*/, 7];
-            case 6:
-                console.log(head['content-length'], '=', stat.size);
-                _a.label = 7;
-            case 7: return [3 /*break*/, 10];
-            case 8: return [4 /*yield*/, download(source + '', destination)];
-            case 9:
-                _a.sent();
-                _a.label = 10;
-            case 10:
                 _i++;
-                return [3 /*break*/, 3];
-            case 11: return [2 /*return*/];
+                return [3 /*break*/, 1];
+            case 6: return [2 /*return*/];
         }
     });
 }); })();
-function download(source, destination) {
-    return __awaiter(this, void 0, void 0, function () {
-        var request, end, e_1, stat;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    request = require('request');
-                    end = new Promise(function (resolve, reject) {
-                        var output = fs.createWriteStream(destination);
-                        var piper = request(source).pipe(output);
-                        output.on('end', function () {
-                            // console.log('stream end');
-                            resolve(destination);
-                        });
-                        output.on('finish', function () {
-                            // console.log('stream finish');
-                            resolve(destination);
-                        });
-                        output.on('error', reject);
-                    });
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, end];
-                case 2:
-                    _a.sent();
-                    return [3 /*break*/, 4];
-                case 3:
-                    e_1 = _a.sent();
-                    console.error(e_1);
-                    return [3 /*break*/, 4];
-                case 4:
-                    stat = fs.statSync(destination);
-                    console.log('downloaded', stat.size);
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
+//# sourceMappingURL=abooks.js.map
