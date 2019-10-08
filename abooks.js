@@ -43,7 +43,7 @@ if (!url) {
     throw new Error('> node abooks.js https://abooks.info/...');
 }
 (function () { return __awaiter(void 0, void 0, void 0, function () {
-    var rp, html, cheerio, $, player, dataTracksURL, jsonSource, json, folder, request, _loop_1, _i, json_1, desc;
+    var rp, html, cheerio, $, player, dataTracksURL, jsonSource, json, folder, _i, json_1, desc, source, destination, stat, head;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -65,59 +65,75 @@ if (!url) {
                 if (!fs.existsSync(folder)) {
                     fs.mkdirSync(folder);
                 }
-                request = require('request');
-                _loop_1 = function (desc) {
-                    var source, destination, end, e_1, size;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                source = new URL(desc.audio);
-                                destination = folder + '/' + path.basename(source.pathname);
-                                console.log(destination);
-                                end = new Promise(function (resolve, reject) {
-                                    var output = fs.createWriteStream(destination);
-                                    var piper = request(desc.audio).pipe(output);
-                                    output.on('end', function () {
-                                        // console.log('stream end');
-                                        resolve(destination);
-                                    });
-                                    output.on('finish', function () {
-                                        // console.log('stream finish');
-                                        resolve(destination);
-                                    });
-                                    output.on('error', reject);
-                                });
-                                _a.label = 1;
-                            case 1:
-                                _a.trys.push([1, 3, , 4]);
-                                return [4 /*yield*/, end];
-                            case 2:
-                                _a.sent();
-                                return [3 /*break*/, 4];
-                            case 3:
-                                e_1 = _a.sent();
-                                console.error(e_1);
-                                return [3 /*break*/, 4];
-                            case 4:
-                                size = fs.statSync(destination);
-                                console.log(size.size);
-                                return [2 /*return*/];
-                        }
-                    });
-                };
                 _i = 0, json_1 = json;
                 _a.label = 3;
             case 3:
-                if (!(_i < json_1.length)) return [3 /*break*/, 6];
+                if (!(_i < json_1.length)) return [3 /*break*/, 11];
                 desc = json_1[_i];
-                return [5 /*yield**/, _loop_1(desc)];
+                source = new URL(desc.audio);
+                destination = folder + '/' + path.basename(source.pathname);
+                console.log(destination);
+                stat = fs.statSync(destination);
+                if (!stat) return [3 /*break*/, 8];
+                return [4 /*yield*/, rp.head(source + '')];
             case 4:
-                _a.sent();
-                _a.label = 5;
+                head = _a.sent();
+                if (!(head['content-length'] > stat.size)) return [3 /*break*/, 6];
+                return [4 /*yield*/, download(source + '', destination)];
             case 5:
+                _a.sent();
+                return [3 /*break*/, 7];
+            case 6:
+                console.log(head['content-length'], '=', stat.size);
+                _a.label = 7;
+            case 7: return [3 /*break*/, 10];
+            case 8: return [4 /*yield*/, download(source + '', destination)];
+            case 9:
+                _a.sent();
+                _a.label = 10;
+            case 10:
                 _i++;
                 return [3 /*break*/, 3];
-            case 6: return [2 /*return*/];
+            case 11: return [2 /*return*/];
         }
     });
 }); })();
+function download(source, destination) {
+    return __awaiter(this, void 0, void 0, function () {
+        var request, end, e_1, stat;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    request = require('request');
+                    end = new Promise(function (resolve, reject) {
+                        var output = fs.createWriteStream(destination);
+                        var piper = request(source).pipe(output);
+                        output.on('end', function () {
+                            // console.log('stream end');
+                            resolve(destination);
+                        });
+                        output.on('finish', function () {
+                            // console.log('stream finish');
+                            resolve(destination);
+                        });
+                        output.on('error', reject);
+                    });
+                    _a.label = 1;
+                case 1:
+                    _a.trys.push([1, 3, , 4]);
+                    return [4 /*yield*/, end];
+                case 2:
+                    _a.sent();
+                    return [3 /*break*/, 4];
+                case 3:
+                    e_1 = _a.sent();
+                    console.error(e_1);
+                    return [3 /*break*/, 4];
+                case 4:
+                    stat = fs.statSync(destination);
+                    console.log('downloaded', stat.size);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}

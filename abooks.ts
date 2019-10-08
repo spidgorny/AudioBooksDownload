@@ -27,33 +27,48 @@ if (!url) {
 		fs.mkdirSync(folder);
 	}
 
-	const request = require('request');
 	for (let desc of json) {
 		const source = new URL(desc.audio);
 		const destination = folder + '/' + path.basename(source.pathname);
 		console.log(destination);
 
-		const end = new Promise(function(resolve, reject) {
-			let output = fs.createWriteStream(destination);
-			const piper = request(desc.audio).pipe(output);
-			output.on('end', () => {
-				// console.log('stream end');
-				resolve(destination);
-			});
-			output.on('finish', () => {
-				// console.log('stream finish');
-				resolve(destination);
-			});
-			output.on('error', reject);
-		});
-		// console.log(piper);
-		try {
-			await end;
-		} catch (e) {
-			console.error(e);
+		let stat = fs.statSync(destination);
+		if (stat) {
+			// console.log('exists');
+			const head = await rp.head(source + '');
+			// console.log(head);
+			if (head['content-length'] > stat.size) {
+				await download(source + '', destination);
+			} else {
+				console.log(head['content-length'], '=', stat.size);
+			}
+		} else {
+			await download(source + '', destination);
 		}
-
-		const size = fs.statSync(destination);
-		console.log(size.size);
 	}
 })();
+
+async function download(source: string, destination: string) {
+	const request = require('request');
+	const end = new Promise(function (resolve, reject) {
+		let output = fs.createWriteStream(destination);
+		const piper = request(source).pipe(output);
+		output.on('end', () => {
+			// console.log('stream end');
+			resolve(destination);
+		});
+		output.on('finish', () => {
+			// console.log('stream finish');
+			resolve(destination);
+		});
+		output.on('error', reject);
+	});
+	// console.log(piper);
+	try {
+		await end;
+	} catch (e) {
+		console.error(e);
+	}
+	const stat = fs.statSync(destination);
+	console.log('downloaded', stat.size);
+}
