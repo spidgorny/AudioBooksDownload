@@ -4,7 +4,8 @@
   "description": "Scripts to download and extract audio files from audioknigi.club",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "abooks": "node abooks.js https://abooks.info/gerbert-ujells-vojna-mirov/"
   },
   "repository": {
     "type": "git",
@@ -22,10 +23,14 @@
   },
   "homepage": "https://github.com/amurchick/AudioBooksDownload",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
     "co": "^4.6.0",
     "ffmetadata": "^1.3.0",
     "jsdom": "^10",
-    "request": "^2.79.0",
+    "request": "^2.88.0",
     "request-promise": "^4.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^12.7.11"
   }
 }
