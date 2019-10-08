@@ -52,12 +52,12 @@ var AudioKnigiClub = /** @class */ (function () {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, rp({
                             url: this.url,
+                            method: 'POST',
                             headers: {
                                 'accept': 'application/json, text/javascript, */*; q=0.01',
                                 'accept-encoding': 'gzip, deflate, br',
                                 'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
                                 'cache-control': 'no-cache',
-                                'content-length': '248',
                                 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
                                 'cookie': 'PHPSESSID=s7egpvj9due9b4sd1org3flag0; a_ismobile=0',
                                 'origin': 'https://audioknigi.club',
